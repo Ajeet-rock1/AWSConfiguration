@@ -1,0 +1,35 @@
+# EC2 instance variable
+
+region: "ap-south-1"
+cidr: 192.168.0.0/16
+public_subnet: 192.168.1.0/24
+private_subnet: 192.168.2.0/24
+public_subnet_az: "ap-south-1a"
+private_subnet_az: "ap-south-1a"
+env: development
+#sg: test-sg
+public_subnet: "{{ lookup('file', '/tmp/public-subnet') }}"
+
+is_10_up: "'$ansible_distribution_version'  >= '10.04'"
+is_ubuntu: "'$ansible_distribution' == 'Ubuntu'"
+ansible_ssh_private_key_file: /etc/ansible/cool.pem
+ansible_ssh_user: ubuntu 
+ansible_ssh_port: 22
+
+ec2: 
+  region: ap-south-1
+  credentials: cool
+  image: ami-27fe8d48
+  security_group: "{{ec2_group_info.group_id }}"
+  instance_type: t2.micro
+  subnet_id: "{{ lookup('file', '/tmp/private-subnet') }}"
+  public_ip: no
+  private_ip: yes
+  ssh_user: ubuntu
+  ssh_path: /etc/ansible/cool.pem
+  tags: 
+    Name: launched
+  volumes:
+     - device_name: /dev/xvda
+       volume_type: standard
+       volume_size: 8

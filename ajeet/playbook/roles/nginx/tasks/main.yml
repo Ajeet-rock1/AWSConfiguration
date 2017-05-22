@@ -1,0 +1,27 @@
+---
+    - name: install python-software-properties
+      action: apt pkg='python-software-properties' state=installed
+ 
+    - name: Add Nginx Repository
+      apt_repository: repo='ppa:nginx/stable' state=present
+      register: ppastable
+ 
+    - name: update apt repo
+      action: command /usr/bin/apt-get update
+    
+    - name: Install nginx
+      action: apt pkg=nginx state=installed update_cache=no
+
+    - name: copy nginc config for webaccess
+      template: src=roles/nginx/templates/default.conf.j2 dest=/etc/nginx/sites-available/default.conf mode=0644 owner=ubuntu group=ubuntu
+#  template: src=roles/nginx/templates/index.html.j2 dest=/usr/share/nginx/html/index.html
+
+    - name: Remove index.html for host
+      command: rm /usr/share/nginx/html/index.html
+
+    - name: Upload default index.html for host
+      copy: src=roles/nginx/templates/index.html dest=/usr/share/nginx/html mode=0644
+    - name: Restart Nginx services
+      service: name=nginx state=restarted
+
+

@@ -1,0 +1,33 @@
+---
+
+- name: create elb
+  ec2_elb_lb:
+    name: ELB-test
+    state: present
+    region: ap-south-1
+    subnets: "{{ public_subnet }}"
+    zones: [ ]
+#      - ap-south-1a
+#      - ap-south-1b
+    listeners:
+      - protocol: http
+        load_balancer_port: 80
+        instance_port: 80
+    health_check:
+        ping_protocol: http # options are http, https, ssl, tcp
+        ping_port: 8900
+        ping_path: "/usr/share/nginx/html/index.html" # not required for tcp or ssl
+        response_timeout: 5 # seconds
+        interval: 30 # seconds
+        unhealthy_threshold: 2
+        healthy_threshold: 10
+  register: ec2_elb_lb
+
+- name: add the webservers to elb
+  ec2_elb:
+    instance_id: "{{item}}"
+    ec2_elbs: ELB-test
+    state: present
+    region: ap-south-1
+  with_items:
+    - "{{ec2_out.instance_ids}}" 

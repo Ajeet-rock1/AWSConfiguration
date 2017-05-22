@@ -1,0 +1,52 @@
+---
+
+- name: create vpc 
+  ec2_vpc:
+      state: present
+      cidr_block: 192.168.0.0/16
+      resource_tags: { "ansible":"test-vpc" }
+      region: ap-south-1
+      subnets:
+        - cidr: 192.168.2.0/24
+          az: ap-south-1a
+          resource_tags: { "Subnet":"Private" }
+        - cidr: 192.168.1.0/24
+          az: ap-south-1a
+          resource_tags: { "Subnet":"Public" }
+      internet_gateway: True
+      route_tables:
+            - subnets:
+                 - 192.168.1.0/24
+              routes:
+                 - dest: 0.0.0.0/0
+                   gw: igw
+      region: ap-south-1
+  register: vpc
+
+- name: Copy the file to /tmp
+  local_action: template src=create-nat-gw.sh dest=/tmp/create-nat-gw.sh mode=0755
+
+- name: Create NAT gateway by executing the script
+  shell: sh /tmp/create-nat-gw.sh
+  
+
+- name: Modify private subnet
+
+  ec2_vpc_route_table:
+        vpc_id: '{{ vpc.vpc_id }}'
+        region: '{{ region }}'
+        subnets:
+          - "{{ lookup('file', '/tmp/private-subnet') }}"
+
+        routes:
+          - dest: 0.0.0.0/0
+            gateway_id: "{{ lookup('file', '/tmp/nat-gateway') }}"
+
+
+#-----------------------------------------------------------------------------------------------------
+
+
+- name: To create ec2 instances
+  include: roles/ec2/tasks/main.yml
+    
+

@@ -1,0 +1,17 @@
+---
+- name: Create ec2 and elb
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  roles:
+   - ec2_vpc
+   - ec2_elb
+  tags: ec2
+
+- hosts: launched
+  remote_user: ubuntu
+  sudo: yes
+  vars:
+  roles:
+    - nginx
+
